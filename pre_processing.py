@@ -6,10 +6,45 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 
-class PreProcessing:
+class Analyze:
     def __init__(self):
         self.train_database = pd.read_csv('database/train.csv')
         self.test_database = pd.read_csv('database/test.csv')
+
+    def distribution_graph(self):
+        plt.figure(figsize=(10, 10))
+        plt.hist(self.train_database['SalePrice'], bins=30, color='red', edgecolor='black')
+        plt.xlabel('Sale Price')
+        plt.ylabel('Count')
+        plt.title('Distribution of house price')
+        plt.show()
+
+    def correlation_features(self):
+        numeric_data = self.train_database.select_dtypes(include=['number'])
+        correlation_matrix = numeric_data.corr()
+        sale_price_correlation = correlation_matrix['SalePrice'].sort_values(ascending=False)
+        print(sale_price_correlation)
+
+        sale_price_correlation = sale_price_correlation.drop(columns='SalePrice')
+
+        plt.figure(figsize=(10, 8))
+        sale_price_correlation.plot(kind='bar', color='red')
+        plt.xlabel('Features')
+        plt.ylabel('Correlation')
+        plt.show()
+
+        important_features = {}
+        for feature, value in sale_price_correlation.items():
+            if value > 0.50:
+                important_features.update({feature: value})
+
+        print(important_features.keys())
+
+
+
+class PreProcessing:
+    def __init__(self, analyze: Analyze):
+        self.analyze = analyze
         self.X_train = None
         self.y_train = None
         self.X_val = None
@@ -19,11 +54,11 @@ class PreProcessing:
 
     def pre_processing_train(self):
         # (1460, 81)
-        # print(self.train_database.shape)
+        # print(self.analyze.train_database.shape)
         # (1459, 80)
-        # print(self.test_database.shape)
+        # print(self.analyze.test_database.shape)
 
-        train_data = self.train_database.loc[:, ['LotArea', 'LotFrontage', 'LotShape','YearBuilt', 'OverallQual', 'TotalBsmtSF', 'GarageCars', 'SalePrice', 'GrLivArea']]
+        train_data = self.analyze.train_database.loc[:, ['LotArea', 'LotFrontage', 'LotShape','YearBuilt', 'OverallQual', 'TotalBsmtSF', 'GarageCars', 'SalePrice', 'GrLivArea']]
 
         # print(train_data.head()) # - 5 rows x 9 Columns
 
@@ -79,7 +114,7 @@ class PreProcessing:
 
 
     def pre_processing_test(self):
-        test_data = self.test_database.loc[:,
+        test_data = self.analyze.test_database.loc[:,
                     ['LotArea', 'LotFrontage', 'LotShape', 'YearBuilt', 'OverallQual', 'TotalBsmtSF', 'GarageCars',
                      'GrLivArea']]
 
@@ -121,38 +156,7 @@ class PreProcessing:
         print(test_data.loc[pd.isnull(test_data['GarageCars'])])
 
 
-class Graph:
-    def __init__(self, pre_processing: PreProcessing):
-        self.pre_processing = pre_processing
 
-    def distribution_graph(self):
-        plt.figure(figsize=(10, 10))
-        plt.hist(self.pre_processing.train_database['SalePrice'], bins=30, color='red', edgecolor='black')
-        plt.xlabel('Sale Price')
-        plt.ylabel('Count')
-        plt.title('Distribution of house price')
-        plt.show()
-
-    def correlation_features(self):
-        numeric_data = self.pre_processing.train_database.select_dtypes(include=['number'])
-        correlation_matrix = numeric_data.corr()
-        sale_price_correlation = correlation_matrix['SalePrice'].sort_values(ascending=False)
-        print(sale_price_correlation)
-
-        sale_price_correlation = sale_price_correlation.drop(columns='SalePrice')
-
-        plt.figure(figsize=(10, 8))
-        sale_price_correlation.plot(kind='bar', color='red')
-        plt.xlabel('Features')
-        plt.ylabel('Correlation')
-        plt.show()
-
-        important_features = {}
-        for feature, value in sale_price_correlation.items():
-            if value > 0.50:
-                important_features.update({feature: value})
-
-        print(important_features.keys())
 
 
 

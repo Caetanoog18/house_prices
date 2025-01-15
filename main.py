@@ -1,16 +1,18 @@
 from train import Train
-from pre_processing import PreProcessing, Graph
+from pre_processing import PreProcessing, Analyze
 
-test = PreProcessing()
+analyze = Analyze()
+analyze.distribution_graph()
+analyze.correlation_features()
+
+test = PreProcessing(analyze)
 test.pre_processing_train()
 test.pre_processing_test()
 
 # train = Train()
 # train.train_xgb()
 
-graph = Graph(test)
-graph.distribution_graph()
-graph.correlation_features()
+
 
 
 
