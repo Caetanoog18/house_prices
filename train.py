@@ -1,17 +1,20 @@
 import pickle
 from pre_processing import PreProcessing
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+
 
 
 class Train:
+
     def __init__(self):
         self.X_training = None
         self.y_training = None
         self.X_val = None
         self.y_val = None
 
-    def train(self):
+    def train_xgb(self):
         with open('database/train_database.pkl', 'rb') as file:
             self.X_training, self.X_val, self.y_training, self.y_val = pickle.load(file)
 

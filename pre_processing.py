@@ -1,8 +1,10 @@
 import pickle
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
+
 
 class PreProcessing:
     def __init__(self):
@@ -117,6 +119,41 @@ class PreProcessing:
         print(test_data.loc[pd.isnull(test_data['LotFrontage'])])
         print(test_data.loc[pd.isnull(test_data['TotalBsmtSF'])])
         print(test_data.loc[pd.isnull(test_data['GarageCars'])])
+
+
+class Graph:
+    def __init__(self, pre_processing: PreProcessing):
+        self.pre_processing = pre_processing
+
+    def distribution_graph(self):
+        plt.figure(figsize=(10, 10))
+        plt.hist(self.pre_processing.train_database['SalePrice'], bins=30, color='red', edgecolor='black')
+        plt.xlabel('Sale Price')
+        plt.ylabel('Count')
+        plt.title('Distribution of house price')
+        plt.show()
+
+    def correlation_features(self):
+        numeric_data = self.pre_processing.train_database.select_dtypes(include=['number'])
+        correlation_matrix = numeric_data.corr()
+        sale_price_correlation = correlation_matrix['SalePrice'].sort_values(ascending=False)
+        print(sale_price_correlation)
+
+        sale_price_correlation = sale_price_correlation.drop(columns='SalePrice')
+
+        plt.figure(figsize=(10, 8))
+        sale_price_correlation.plot(kind='bar', color='red')
+        plt.xlabel('Features')
+        plt.ylabel('Correlation')
+        plt.show()
+
+        important_features = {}
+        for feature, value in sale_price_correlation.items():
+            if value > 0.50:
+                important_features.update({feature: value})
+
+        print(important_features.keys())
+
 
 
 
