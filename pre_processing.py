@@ -1,15 +1,17 @@
 import pickle
 import numpy as np
 import pandas as pd
+import plotly.express as px
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
 
 
 class Analyze:
     def __init__(self):
         self.train_database = pd.read_csv('database/train.csv')
         self.test_database = pd.read_csv('database/test.csv')
+        self.important_features = {}
 
     def distribution_graph(self):
         plt.figure(figsize=(10, 10))
@@ -33,13 +35,17 @@ class Analyze:
         plt.ylabel('Correlation')
         plt.show()
 
-        important_features = {}
         for feature, value in sale_price_correlation.items():
             if value > 0.50:
-                important_features.update({feature: value})
+                self.important_features.update({feature: value})
 
-        print(important_features.keys())
+        print(self.important_features.keys())
 
+    def boxplot_graph(self):
+        self.correlation_features()
+        for feature in self.important_features.keys():
+            graph = px.box(self.train_database, y=feature)
+            # graph.show()
 
 
 class PreProcessing:
@@ -58,19 +64,20 @@ class PreProcessing:
         # (1459, 80)
         # print(self.analyze.test_database.shape)
 
-        train_data = self.analyze.train_database.loc[:, ['LotArea', 'LotFrontage', 'LotShape','YearBuilt', 'OverallQual', 'TotalBsmtSF', 'GarageCars', 'SalePrice', 'GrLivArea']]
+        train_data = self.analyze.train_database.loc[:, ['LotShape','SalePrice', 'OverallQual', 'GrLivArea',
+                                                         'GarageCars', 'GarageArea', 'TotalBsmtSF', '1stFlrSF', 'FullBath',
+                                                         'TotRmsAbvGrd', 'YearBuilt']]
 
-        # print(train_data.head()) # - 5 rows x 9 Columns
-
-        # print(self.X_train.shape) # - (1460, 8)
-        # print(self.y_train.shape) # - (1460,)
+        # print(train_data.head())
+        # print(self.X_train.shape)
+        # print(self.y_train.shape)
 
 
         label_encoder_lot_shape = LabelEncoder()
         train_data['LotShape'] = label_encoder_lot_shape.fit_transform(train_data['LotShape'])
 
-        columns = ['LotArea', 'LotFrontage', 'LotShape', 'YearBuilt', 'OverallQual', 'TotalBsmtSF',
-                             'GarageCars', 'SalePrice','GrLivArea']
+        columns = ['LotShape','SalePrice', 'OverallQual', 'GrLivArea','GarageCars', 'GarageArea',
+                   'TotalBsmtSF', '1stFlrSF', 'FullBath', 'TotRmsAbvGrd', 'YearBuilt']
 
         inconsistencies = []
         # Verifying inconsistent values
@@ -91,11 +98,13 @@ class PreProcessing:
             if num_missing>0:
                 print(f"Column: {column}, Missing values: {num_missing}")
                 print(train_data[train_data[column].isnull()])
+            else:
+                print(f'No missing values in column {column}')
 
-        train_data.fillna(train_data['LotFrontage'].mean(), inplace=True)
+        #train_data.fillna(train_data['LotFrontage'].mean(), inplace=True)
 
         # Test inconsistent values
-        print(train_data.loc[pd.isnull(train_data['LotFrontage'])])
+        #print(train_data.loc[pd.isnull(train_data['LotFrontage'])])
 
         # Removing outliers from target variable SalePrice
         train_data['SalePrice'] = np.log1p(train_data['SalePrice'])
@@ -104,7 +113,8 @@ class PreProcessing:
         x = train_data.drop(columns=['SalePrice'])
         y = train_data['SalePrice']
 
-        scaler = StandardScaler()
+        scaler = MinMaxScaler()
+        #scaler = StandardScaler()
         x = scaler.fit_transform(x)
 
         self.X_train, self.y_train, self.X_val, self.y_val = train_test_split(x, y, test_size=0.25, random_state=42)
@@ -114,17 +124,18 @@ class PreProcessing:
 
 
     def pre_processing_test(self):
-        test_data = self.analyze.test_database.loc[:,
-                    ['LotArea', 'LotFrontage', 'LotShape', 'YearBuilt', 'OverallQual', 'TotalBsmtSF', 'GarageCars',
-                     'GrLivArea']]
+        test_data = self.analyze.test_database.loc[:, ['LotShape', 'OverallQual', 'GrLivArea',
+                                                         'GarageCars', 'GarageArea', 'TotalBsmtSF', '1stFlrSF', 'FullBath',
+                                                         'TotRmsAbvGrd', 'YearBuilt']]
 
         # print(test_data.shape) # (1459, 8)
 
         label_encoder_lot_shape = LabelEncoder()
         test_data['LotShape'] = label_encoder_lot_shape.fit_transform(test_data['LotShape'])
 
-        columns = ['LotArea', 'LotFrontage', 'LotShape', 'YearBuilt', 'OverallQual', 'TotalBsmtSF',
-                             'GarageCars','GrLivArea']
+        columns = ['LotShape', 'OverallQual', 'GrLivArea',
+                                                         'GarageCars', 'GarageArea', 'TotalBsmtSF', '1stFlrSF', 'FullBath',
+                                                         'TotRmsAbvGrd', 'YearBuilt']
 
         inconsistencies = []
         # Verifying inconsistent values
@@ -146,14 +157,15 @@ class PreProcessing:
                 print(f"Column: {column}, Missing values: {num_missing}")
                 print(test_data[test_data[column].isnull()])
 
-        test_data.fillna(test_data['LotFrontage'].mean(), inplace=True)
         test_data.fillna(test_data['TotalBsmtSF'].mean(), inplace=True)
         test_data.fillna(test_data['GarageCars'].mean(), inplace=True)
+        test_data.fillna(test_data['GarageArea'].mean(), inplace=True)
 
         # Test inconsistent values
-        print(test_data.loc[pd.isnull(test_data['LotFrontage'])])
         print(test_data.loc[pd.isnull(test_data['TotalBsmtSF'])])
         print(test_data.loc[pd.isnull(test_data['GarageCars'])])
+        print(test_data.loc[pd.isnull(test_data['GarageArea'])])
+        print(test_data.loc[pd.isnull(test_data['TotalBsmtSF'])])
 
 
 
