@@ -1,3 +1,4 @@
+from test import Test
 from train import Train
 from pre_processing import PreProcessing, Analyze
 
@@ -13,6 +14,12 @@ train = Train()
 # train.train_xgb()
 # train.train_random_forest()
 train.neural_network()
+
+
+test = Test()
+test.apply_model()
+
+
 
 
 

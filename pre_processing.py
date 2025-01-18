@@ -3,8 +3,9 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 from matplotlib import pyplot as plt
+from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder, OneHotEncoder
 
 
 class Analyze:
@@ -57,6 +58,7 @@ class PreProcessing:
         self.y_val = None
         self.X_test = None
         self.y_test = None
+        self.scaler = None
 
     def pre_processing_train(self):
         # (1460, 81)
@@ -65,8 +67,7 @@ class PreProcessing:
         # print(self.analyze.test_database.shape)
 
         train_data = self.analyze.train_database.loc[:, ['LotShape','SalePrice', 'OverallQual', 'GrLivArea',
-                                                         'GarageCars', 'GarageArea', 'TotalBsmtSF', '1stFlrSF', 'FullBath',
-                                                         'TotRmsAbvGrd', 'YearBuilt']]
+                                                         'GarageCars', 'GarageArea', 'TotalBsmtSF']]
 
         # print(train_data.head())
         # print(self.X_train.shape)
@@ -76,8 +77,9 @@ class PreProcessing:
         label_encoder_lot_shape = LabelEncoder()
         train_data['LotShape'] = label_encoder_lot_shape.fit_transform(train_data['LotShape'])
 
-        columns = ['LotShape','SalePrice', 'OverallQual', 'GrLivArea','GarageCars', 'GarageArea',
-                   'TotalBsmtSF', '1stFlrSF', 'FullBath', 'TotRmsAbvGrd', 'YearBuilt']
+
+        columns = ['LotShape','SalePrice', 'OverallQual', 'GrLivArea',
+                                                         'GarageCars', 'GarageArea', 'TotalBsmtSF',]
 
         inconsistencies = []
         # Verifying inconsistent values
@@ -113,9 +115,9 @@ class PreProcessing:
         x = train_data.drop(columns=['SalePrice'])
         y = train_data['SalePrice']
 
-        scaler = MinMaxScaler()
+        self.scaler = MinMaxScaler()
         #scaler = StandardScaler()
-        x = scaler.fit_transform(x)
+        x = self.scaler.fit_transform(x)
 
         self.X_train, self.y_train, self.X_val, self.y_val = train_test_split(x, y, test_size=0.25, random_state=42)
 
@@ -125,19 +127,19 @@ class PreProcessing:
 
     def pre_processing_test(self):
         test_data = self.analyze.test_database.loc[:, ['LotShape', 'OverallQual', 'GrLivArea',
-                                                         'GarageCars', 'GarageArea', 'TotalBsmtSF', '1stFlrSF', 'FullBath',
-                                                         'TotRmsAbvGrd', 'YearBuilt']]
+                                                         'GarageCars', 'GarageArea', 'TotalBsmtSF',]]
 
         # print(test_data.shape) # (1459, 8)
 
         label_encoder_lot_shape = LabelEncoder()
         test_data['LotShape'] = label_encoder_lot_shape.fit_transform(test_data['LotShape'])
 
+
         columns = ['LotShape', 'OverallQual', 'GrLivArea',
-                                                         'GarageCars', 'GarageArea', 'TotalBsmtSF', '1stFlrSF', 'FullBath',
-                                                         'TotRmsAbvGrd', 'YearBuilt']
+                                                         'GarageCars', 'GarageArea', 'TotalBsmtSF',]
 
         inconsistencies = []
+
         # Verifying inconsistent values
         for column in columns:
             negative_values = test_data[test_data[column] < 0]
@@ -161,11 +163,20 @@ class PreProcessing:
         test_data.fillna(test_data['GarageCars'].mean(), inplace=True)
         test_data.fillna(test_data['GarageArea'].mean(), inplace=True)
 
+
         # Test inconsistent values
         print(test_data.loc[pd.isnull(test_data['TotalBsmtSF'])])
         print(test_data.loc[pd.isnull(test_data['GarageCars'])])
         print(test_data.loc[pd.isnull(test_data['GarageArea'])])
         print(test_data.loc[pd.isnull(test_data['TotalBsmtSF'])])
+
+        if self.scaler is not None:
+            test_data_scaled = self.scaler.transform(test_data)
+        else:
+            raise ValueError("Scaler not initialized. Ensure you call pre_processing_train() first.")
+
+        with open('database/test_database.pkl', 'wb') as file:
+            pickle.dump(test_data_scaled, file)
 
 
 

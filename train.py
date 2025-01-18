@@ -2,16 +2,11 @@ import os
 import pickle
 import tensorflow as tf
 from matplotlib import pyplot as plt
-from pre_processing import PreProcessing
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential
-from sklearn.linear_model import LinearRegression
 from tensorflow.keras.layers import Dense, Dropout
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-
-
-
 
 class Train:
     def __init__(self):
@@ -34,6 +29,9 @@ class Train:
 
         xgb_model = GradientBoostingRegressor()
         xgb_model.fit(self.X_training, self.y_training)
+
+        with open('database/xgb_model.pkl', 'wb') as file:
+            pickle.dump(xgb_model, file)
 
         xgb_prediction = xgb_model.predict(self.X_val)
 
@@ -63,7 +61,8 @@ class Train:
         random_forest = RandomForestRegressor(n_estimators=100, criterion='squared_error', random_state=42)
         random_forest.fit(self.X_training, self.y_training)
 
-
+        with open('database/random_forest_model.pkl', 'wb') as file:
+            pickle.dump(random_forest, file)
 
         predictions = random_forest.predict(self.X_val)
         r2_score_value = r2_score(self.y_val, predictions)
@@ -95,6 +94,8 @@ class Train:
 
         history = model.fit(self.X_training, self.y_training, validation_data=(self.X_val, self.y_val), epochs=50,
                             batch_size=16, verbose=1)
+
+        model.save('database/neural_network_model.keras')
 
         predictions = model.predict(self.X_val)
         r2_score_value = r2_score(self.y_val, predictions)
