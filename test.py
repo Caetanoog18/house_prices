@@ -1,10 +1,7 @@
-import os
 import pickle
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from tensorflow.keras.models import load_model
-from sklearn.metrics import mean_squared_error, r2_score
 
 
 class Test:
@@ -21,6 +18,9 @@ class Test:
         neural_network_model = load_model('database/neural_network_model.keras')
 
         test_predictions = neural_network_model.predict(test_data)
+
+        # Removing the warning - RuntimeWarning: overflow encountered in expm1
+        test_predictions =  test_predictions.astype(np.float128)
 
         test_predictions_df = np.expm1(test_predictions).flatten()
 
