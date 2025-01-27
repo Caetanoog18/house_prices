@@ -1,7 +1,9 @@
 import pickle
+import joblib
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from abc import ABC, abstractmethod
 from matplotlib import pyplot as plt
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
@@ -49,9 +51,8 @@ class Analyze:
             # graph.show()
 
 
-class PreProcessing:
-    def __init__(self, analyze: Analyze):
-        self.analyze = analyze
+class PreProcessing(ABC):
+    def __init__(self):
         self.X_train = None
         self.y_train = None
         self.X_val = None
@@ -59,8 +60,15 @@ class PreProcessing:
         self.X_test = None
         self.y_test = None
         self.scaler = None
+        self.analyze = Analyze()
 
-    def pre_processing_train(self):
+    @abstractmethod
+    def pre_processing(self):
+        pass
+
+
+class PreProcessingTrain(PreProcessing):
+    def pre_processing(self):
         # (1460, 81)
         # print(self.analyze.train_database.shape)
         # (1459, 80)
@@ -68,7 +76,6 @@ class PreProcessing:
 
         train_data = self.analyze.train_database.loc[:, ['LotShape','SalePrice', 'OverallQual', 'GrLivArea',
                                                          'GarageCars', 'GarageArea', 'TotalBsmtSF']]
-
         # print(train_data.head())
         # print(self.X_train.shape)
         # print(self.y_train.shape)
@@ -124,8 +131,12 @@ class PreProcessing:
         with open('database/train_database.pkl', 'wb') as file:
             pickle.dump([self.X_train, self.y_train, self.X_val, self.y_val], file)
 
+        # Saving the scaler
+        joblib.dump(self.scaler, 'database/scaler.pkl')
 
-    def pre_processing_test(self):
+
+class PreProcessingTest(PreProcessing):
+    def pre_processing(self):
         test_data = self.analyze.test_database.loc[:, ['LotShape', 'OverallQual', 'GrLivArea',
                                                          'GarageCars', 'GarageArea', 'TotalBsmtSF',]]
 
@@ -170,6 +181,8 @@ class PreProcessing:
         print(test_data.loc[pd.isnull(test_data['GarageArea'])])
         print(test_data.loc[pd.isnull(test_data['TotalBsmtSF'])])
 
+        self.scaler = joblib.load('database/scaler.pkl')
+
         if self.scaler is not None:
             test_data_scaled = self.scaler.transform(test_data)
         else:
@@ -177,8 +190,6 @@ class PreProcessing:
 
         with open('database/test_database.pkl', 'wb') as file:
             pickle.dump(test_data_scaled, file)
-
-
 
 
 

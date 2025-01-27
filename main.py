@@ -1,23 +1,10 @@
-from test import Test
-from train import Train
-from pre_processing import PreProcessing, Analyze
+from train import Train_NeuralNetwork
+from pre_processing import PreProcessing, PreProcessingTest, PreProcessingTrain, Analyze
+from test import TestNeuralNetwork, TestRandomForestRegressor, TestGradientBoostingRegressor
 
-analyze = Analyze()
-analyze.distribution_graph()
-analyze.boxplot_graph()
-
-test = PreProcessing(analyze)
-test.pre_processing_train()
-test.pre_processing_test()
-
-train = Train()
-# train.train_xgb()
-# train.train_random_forest()
-train.neural_network()
-
-
-test = Test()
-test.apply_model()
+train = PreProcessingTrain().pre_processing()
+test_pre_processing = PreProcessingTest().pre_processing()
+model = TestNeuralNetwork(test_pre_processing).apply_model()
 
 
 
